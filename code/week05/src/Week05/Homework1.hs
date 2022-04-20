@@ -39,13 +39,29 @@ import           Wallet.Emulator.Wallet
 -- This policy should only allow minting (or burning) of tokens if the owner of the specified PaymentPubKeyHash
 -- has signed the transaction and if the specified deadline has not passed.
 mkPolicy :: PaymentPubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
-mkPolicy pkh deadline () ctx = True -- FIX ME!
+mkPolicy pkh deadline () ctx = traceIfFalse "Signature of specified PubKeyHash has not signed the transaction" signature &&
+                               traceIfFalse "Deadline has passed" beforeDeadline 
+
+  where
+    info :: TxInfo 
+    info = scriptContextTxInfo ctx 
+
+    signature :: Bool
+    signature = txSignedBy info $ unPaymentPubKeyHash pkh
+
+    beforeDeadline :: Bool
+    beforeDeadline = containts (to deadline) $ txInfoValidRange info 
 
 policy :: PaymentPubKeyHash -> POSIXTime -> Scripts.MintingPolicy
-policy pkh deadline = undefined -- IMPLEMENT ME!
+policy pkh deadline = mkMintingPolicyScript $ 
+    $$(PlutusTx.compile [|| \pkh' deadline' -> Scripts.wrapMintingPolicy $ mkPolicy pkh' deadline' ||])
+        `PlutusTx.applyCode` 
+        PlutusTx.liftCode pkh
+        `PlutusTx.applyCode`
+        PlutusTx.liftCode deadline 
 
 curSymbol :: PaymentPubKeyHash -> POSIXTime -> CurrencySymbol
-curSymbol pkh deadline = undefined -- IMPLEMENT ME!
+curSymbol pkh deadline = scriptCurrencySymbol $ policy pkh deadline 
 
 data MintParams = MintParams
     { mpTokenName :: !TokenName
