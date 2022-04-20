@@ -37,7 +37,7 @@ mkValidator _ (x,y) _ = traceIfFalse "Wrong Redeemer" $ x == y
 data Typed
 instance Scripts.ValidatorTypes Typed where
     type instance DatumType Typed = ()
-    type instance RedemeerType Typed = (Bool,Bool)
+    type instance RedeemerType Typed = (Bool,Bool)
 
 typedValidator :: Scripts.TypedValidator Typed
 typedValidator = Scripts.mkTypedValidator @Typed 

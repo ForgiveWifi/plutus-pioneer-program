@@ -83,6 +83,9 @@ typedValidator = Scripts.mkTypedValidator @Vesting
 validator :: Validator
 validator = Scripts.validatorScript typedValidator
 
+valHash :: Ledger.ValidatorHash
+valHash = Scripts.validatorHash typedValidator
+
 scrAddress :: Ledger.Address
 scrAddress = scriptAddress validator
 

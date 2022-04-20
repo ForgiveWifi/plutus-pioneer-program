@@ -17,6 +17,7 @@ import Ledger.Ada            as Ada
 import Ledger.Constraints    as Constraints
 import Plutus.Contract       as Contract
 import Plutus.Trace.Emulator as Emulator
+import Wallet.Emulator.Wallet
 
 data PayParams = PayParams
     { ppRecipient :: PaymentPubKeyHash

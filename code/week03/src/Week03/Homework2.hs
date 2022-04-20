@@ -58,7 +58,7 @@ instance Scripts.ValidatorTypes Vesting where
 
 typedValidator :: PaymentPubKeyHash -> Scripts.TypedValidator Vesting
 typedValidator pkh = Scripts.mkTypedValidator @Vesting 
-    $$(PlutusTx.compile [|| mkValidator ||]) `PlutusTx.applyCode` PlutusTx.makeLift pkh
+    ($$(PlutusTx.compile [|| mkValidator ||]) `PlutusTx.applyCode` PlutusTx.liftCode pkh)
     $$(PlutusTx.compile [|| wrap ||])
   where
     wrap = Scripts.wrapValidator @POSIXTime @()
@@ -66,7 +66,7 @@ typedValidator pkh = Scripts.mkTypedValidator @Vesting
 validator :: PaymentPubKeyHash -> Validator
 validator = Scripts.validatorScript . typedValidator 
 
-valHash :: Ledger.ValidatorHash 
+valHash :: PaymentPubKeyHash -> Ledger.ValidatorHash 
 valHash = Scripts.validatorHash . typedValidator 
 
 scrAddress :: PaymentPubKeyHash -> Ledger.Address

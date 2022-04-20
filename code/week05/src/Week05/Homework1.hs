@@ -50,7 +50,7 @@ mkPolicy pkh deadline () ctx = traceIfFalse "Signature of specified PubKeyHash h
     signature = txSignedBy info $ unPaymentPubKeyHash pkh
 
     beforeDeadline :: Bool
-    beforeDeadline = containts (to deadline) $ txInfoValidRange info 
+    beforeDeadline = contains (to deadline) $ txInfoValidRange info 
 
 policy :: PaymentPubKeyHash -> POSIXTime -> Scripts.MintingPolicy
 policy pkh deadline = mkMintingPolicyScript $ 

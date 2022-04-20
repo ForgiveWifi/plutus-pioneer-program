@@ -30,13 +30,13 @@ import           Wallet.Emulator.Wallet
 
 {-# INLINABLE tn #-}
 tn :: TokenName
-tn = Token emptyByteString 
+tn = TokenName emptyByteString 
 
 {-# INLINABLE mkPolicy #-}
 -- Minting policy for an NFT, where the minting transaction must consume the given UTxO as input
 -- and where the TokenName will be the empty ByteString.
 mkPolicy :: TxOutRef -> () -> ScriptContext -> Bool
-mkPolicy oref () ctx = traceIfFalse "Specified UTxO has not been consumed" hasUTxo 
+mkPolicy oref () ctx = traceIfFalse "Specified UTxO has not been consumed" hasUTxO &&
                        traceIfFalse "Does not has the correct minting value for an NFT" mintValue 
 
   where 
@@ -44,11 +44,11 @@ mkPolicy oref () ctx = traceIfFalse "Specified UTxO has not been consumed" hasUT
     info = scriptContextTxInfo ctx 
 
     hasUTxO :: Bool 
-    hasUTxO = any (\x -> txInInfoOutRef x == oref ) txInfoInputs info 
+    hasUTxO = any (\x -> txInInfoOutRef x == oref ) $ txInfoInputs info 
 
     mintValue :: Bool 
-    mintValue = case txInfoMint info of 
-      [(cs',tn',amt')] -> cs' == ownCurrencySymbol ctx && tn' == tn && amt == 1 
+    mintValue = case flattenValue $ txInfoMint info of 
+      [(cs,tn',amt)] -> cs == ownCurrencySymbol ctx && tn' == tn && amt == 1 
       _                -> False 
 
 policy :: TxOutRef -> Scripts.MintingPolicy
@@ -72,8 +72,8 @@ mint addr = do
             lookups = Constraints.mintingPolicy (policy oref) <> Constraints.unspentOutputs utxos
             tx = Constraints.mustMintValue val <> Constraints.mustSpendPubKeyOutput oref
         ledgerTx <- submitTxConstraintsWith @Void lookups tx 
-        void $ awaitTxConfirmed getCardanoTxId ledgerTx
-        Contact.logInfo @String $ printf "Minted %s" show $ flattenValue val 
+        void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
+        Contract.logInfo @String $ printf "Minted %s" $ show val 
 
 endpoints :: Contract () NFTSchema Text ()
 endpoints = mint' >> endpoints
